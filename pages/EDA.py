@@ -13,7 +13,10 @@ st.set_page_config(
 
 @st.cache(allow_output_mutation=True)
 def load_data():
-    dataframes = []
+    # URL ของไฟล์ CSV บน Google Drive
+    # ค้นหาไฟล์ .parquet ทั้ง 10 ไฟล์
+    dataframes =  []
+    file_list = glob.glob(r'pages\parquet_DF\file_part_*.parquet')
     for file in file_list:
         try:
             df = pd.read_parquet(file)
@@ -24,8 +27,10 @@ def load_data():
     if not dataframes:
         raise ValueError("No valid DataFrames to concatenate.")
 
+    # ใช้ list comprehension เพื่ออ่านไฟล์ทั้งหมดแล้วรวมเป็น DataFrame เดียว
     combined_df = pd.concat(dataframes, ignore_index=True)
 
+    #combined_df = pd.read_parquet("parquet_dir_access/combined.parquet")
     return combined_df
 def add_seconds(date_str):
     if len(date_str.split(':')) == 2:  # ตรวจสอบว่ามีแค่ชั่วโมงและนาที
