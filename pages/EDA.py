@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import gdown
+import glob
 import plotly.graph_objects as go
 st.set_page_config(
     page_title="Log Monitoring",
@@ -13,13 +14,13 @@ st.set_page_config(
 @st.cache(allow_output_mutation=True)
 def load_data():
     # URL ของไฟล์ CSV บน Google Drive
-    file_url = 'https://drive.google.com/uc?id=1iFAo1LPUijiDHR3dMWnhcDQRNJLSLpLj'
+    # ค้นหาไฟล์ .parquet ทั้ง 10 ไฟล์
+    file_list = glob.glob(r'pages\parquet_DF\file_part_*.parquet')
 
-    # ดาวน์โหลดไฟล์ CSV จาก Google Drive
-    gdown.download(file_url, 'data.parquet', quiet=False)
+    # ใช้ list comprehension เพื่ออ่านไฟล์ทั้งหมดแล้วรวมเป็น DataFrame เดียว
+    combined_df= pd.concat([pd.read_parquet(file) for file in file_list], ignore_index=True)
 
-    # โหลดข้อมูลจากไฟล์ CSV
-    combined_df = pd.read_parquet('data.parquet')
+    
     #combined_df = pd.read_parquet("parquet_dir_access/combined.parquet")
     return combined_df
 def add_seconds(date_str):
