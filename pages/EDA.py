@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import gdown
 import glob
+import os
 import plotly.graph_objects as go
 st.set_page_config(
     page_title="Log Monitoring",
@@ -10,27 +11,34 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
-
 @st.cache(allow_output_mutation=True)
 def load_data():
-    # URL ของไฟล์ CSV บน Google Drive
-    # ค้นหาไฟล์ .parquet ทั้ง 10 ไฟล์
-    dataframes =  []
-    file_list = glob.glob(r'pages\parquet_DF\file_part_*.parquet')
+    dataframes = []
+    file_list = glob.glob('pages/parquet_DF/file_part_*.parquet')
+
+    if not file_list:
+        st.error("No Parquet files found in the specified directory.")
+        return None
+
     for file in file_list:
-        try:
-            df = pd.read_parquet(file)
-            dataframes.append(df)
-        except Exception as e:
-            print(f"Error loading {file}: {e}")
+        if os.path.exists(file):
+            try:
+                df = pd.read_parquet(file)
+                if df.empty:
+                    st.warning(f"The file {file} is empty.")
+                else:
+                    dataframes.append(df)
+                    st.success(f"Loaded {file} with shape {df.shape}.")
+            except Exception as e:
+                st.error(f"Error loading {file}: {e}")
+        else:
+            st.error(f"File does not exist: {file}")
 
     if not dataframes:
-        raise ValueError("No valid DataFrames to concatenate.")
+        st.error("No valid DataFrames to concatenate.")
+        return None
 
-    # ใช้ list comprehension เพื่ออ่านไฟล์ทั้งหมดแล้วรวมเป็น DataFrame เดียว
     combined_df = pd.concat(dataframes, ignore_index=True)
-
-    #combined_df = pd.read_parquet("parquet_dir_access/combined.parquet")
     return combined_df
 def add_seconds(date_str):
     if len(date_str.split(':')) == 2:  # ตรวจสอบว่ามีแค่ชั่วโมงและนาที
